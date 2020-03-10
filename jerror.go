@@ -17,12 +17,6 @@ package jerror
 
 import (
 	"fmt"
-	"sync"
-)
-
-var (
-	m  sync.Mutex
-	id int
 )
 
 var _ error = &Error{}
@@ -30,21 +24,16 @@ var _ error = &Error{}
 // Error contains an error with a message and a unique identifier.
 type Error struct {
 	message string
-	id      int
+	parent  error
 	wrap    error
 }
 
 // New creates a new Error with the given message.
 func New(message string) *Error {
-	m.Lock()
-	defer m.Unlock()
-
 	err := &Error{
 		message: message,
-		id:      id,
 	}
-
-	id++
+	err.parent = err
 
 	return err
 }
@@ -54,7 +43,7 @@ func New(message string) *Error {
 func (j *Error) Args(args ...interface{}) *Error {
 	return &Error{
 		message: fmt.Sprintf(j.message, args...),
-		id:      j.id,
+		parent:  j.parent,
 	}
 }
 
@@ -62,7 +51,7 @@ func (j *Error) Args(args ...interface{}) *Error {
 func (j *Error) Wrap(err error) *Error {
 	return &Error{
 		message: j.message,
-		id:      j.id,
+		parent:  j.parent,
 		wrap:    err,
 	}
 }
@@ -84,7 +73,7 @@ func (j *Error) Unwrap() error {
 // Is implements error interface.
 func (j *Error) Is(err error) bool {
 	if jerr, ok := err.(*Error); ok {
-		return jerr.id == j.id
+		return jerr.parent == j.parent
 	}
 
 	return false
