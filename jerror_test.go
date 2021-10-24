@@ -37,4 +37,8 @@ func TestWrap(t *testing.T) {
 	jerrw := jerr.Wrap(err)
 	require.True(errors.Is(jerrw, err))
 	require.EqualError(jerrw, "jerror error: standard error")
+
+	errw := fmt.Errorf("error: %w", jerrw)
+	require.True(errors.Is(errw, jerr))
+	require.True(errors.Is(errw, err))
 }
