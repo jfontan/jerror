@@ -30,6 +30,7 @@ func TestWrap(t *testing.T) {
 
 	err := fmt.Errorf("standard error")
 	jerr := New("jerror error")
+	jerr2 := New("another error")
 
 	require.True(errors.Is(jerr, jerr))
 	require.False(errors.Is(jerr, err))
@@ -41,4 +42,9 @@ func TestWrap(t *testing.T) {
 	errw := fmt.Errorf("error: %w", jerrw)
 	require.True(errors.Is(errw, jerr))
 	require.True(errors.Is(errw, err))
+
+	jerrw2 := jerr2.Wrap(errw)
+	require.True(errors.Is(jerrw2, jerr))
+	require.True(errors.Is(jerrw2, err))
+	require.True(errors.Is(jerrw2, jerr2))
 }
