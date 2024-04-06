@@ -48,3 +48,37 @@ func TestWrap(t *testing.T) {
 	require.True(errors.Is(jerrw2, err))
 	require.True(errors.Is(jerrw2, jerr2))
 }
+
+var (
+	ErrTest   = New("test error")
+	ErrNormal = fmt.Errorf("normal error")
+)
+
+type ErrEmbed struct {
+	*JError
+	Code int
+}
+
+func ErrEmbedWrap(code int, err error) *ErrEmbed {
+	return &ErrEmbed{
+		JError: ErrTest.Wrap(err),
+		Code:   code,
+	}
+}
+
+func ErrEmbedNew(code int) *ErrEmbed {
+	return &ErrEmbed{
+		JError: ErrTest.Args(),
+		Code:   code,
+	}
+}
+
+func TestEmbed(t *testing.T) {
+	require.True(t, errors.Is(ErrEmbedNew(42), ErrTest))
+
+	jerr := ErrEmbedWrap(42, ErrNormal)
+	oerr := fmt.Errorf("outer error: %w", jerr)
+
+	require.True(t, errors.Is(oerr, ErrNormal))
+	require.True(t, errors.Is(oerr, ErrTest))
+}
