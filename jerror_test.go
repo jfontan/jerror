@@ -81,4 +81,10 @@ func TestEmbed(t *testing.T) {
 
 	require.True(t, errors.Is(oerr, ErrNormal))
 	require.True(t, errors.Is(oerr, ErrTest))
+
+	var perr *ErrEmbed
+	ok := errors.As(oerr, &perr)
+	require.True(t, ok)
+	require.Error(t, perr)
+	require.Equal(t, 42, perr.Code)
 }
