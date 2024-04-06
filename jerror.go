@@ -19,18 +19,18 @@ import (
 	"fmt"
 )
 
-var _ error = &Error{}
+var _ error = &JError{}
 
-// Error contains an error with a message and a unique identifier.
-type Error struct {
+// JError contains an error with a message and a unique identifier.
+type JError struct {
 	message string
 	parent  error
 	wrap    error
 }
 
 // New creates a new Error with the given message.
-func New(message string) *Error {
-	err := &Error{
+func New(message string) *JError {
+	err := &JError{
 		message: message,
 	}
 	err.parent = err
@@ -40,16 +40,16 @@ func New(message string) *Error {
 
 // Args returns a version of the error with the parameters from the message
 // substituted by its args.
-func (j *Error) Args(args ...interface{}) *Error {
-	return &Error{
+func (j *JError) Args(args ...interface{}) *JError {
+	return &JError{
 		message: fmt.Sprintf(j.message, args...),
 		parent:  j.parent,
 	}
 }
 
 // Wrap returns a version of the error wrapping another error.
-func (j *Error) Wrap(err error) *Error {
-	return &Error{
+func (j *JError) Wrap(err error) *JError {
+	return &JError{
 		message: j.message,
 		parent:  j.parent,
 		wrap:    err,
@@ -57,7 +57,7 @@ func (j *Error) Wrap(err error) *Error {
 }
 
 // Error implements error interface.
-func (j *Error) Error() string {
+func (j *JError) Error() string {
 	wmesg := ""
 	if j.wrap != nil {
 		wmesg = ": " + j.wrap.Error()
@@ -66,13 +66,13 @@ func (j *Error) Error() string {
 }
 
 // Unwrap implements error interface.
-func (j *Error) Unwrap() error {
+func (j *JError) Unwrap() error {
 	return j.wrap
 }
 
 // Is implements error interface.
-func (j *Error) Is(err error) bool {
-	if jerr, ok := err.(*Error); ok {
+func (j *JError) Is(err error) bool {
+	if jerr, ok := err.(*JError); ok {
 		return jerr.parent == j.parent
 	}
 
