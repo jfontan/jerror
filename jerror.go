@@ -24,7 +24,9 @@ import (
 var _ error = &JError{}
 
 const (
-	debug = true
+	debug      = true
+	stackDepth = 10
+	stackSkip  = 3
 )
 
 // JErrorBase is used to construct specific errors.
@@ -37,7 +39,7 @@ func (j *JErrorBase) New() *JError {
 	return &JError{
 		message: j.message,
 		parent:  j,
-		Frames:  fillFrames(3, 10),
+		Frames:  fillFrames(stackSkip, stackDepth),
 	}
 }
 
