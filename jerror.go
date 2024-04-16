@@ -10,7 +10,7 @@ Example:
 	fileName := "file.txt"
 	err := os.Open(fileName)
 	if err != nil {
-		return ErrCannotOpen.Args(fileName).Wrap(err)
+		return ErrCannotOpen.New().Args(fileName).Wrap(err)
 	}
 */
 package jerror
