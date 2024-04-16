@@ -3,6 +3,7 @@ package jerror
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -87,4 +88,20 @@ func TestEmbed(t *testing.T) {
 	require.True(t, ok)
 	require.Error(t, perr)
 	require.Equal(t, 42, perr.Code)
+}
+
+func TestStack(t *testing.T) {
+	require := require.New(t)
+
+	err := New("stack error").Stack()
+	require.Len(err.Frames, 3)
+
+	last := err.Frames[0]
+	parts := strings.Split(last.Function, "/")
+	require.Equal("jerror.TestStack", parts[len(parts)-1])
+
+	parts = strings.Split(last.File, "/")
+	require.Equal("jerror_test.go", parts[len(parts)-1])
+
+	require.True(last.Line > 0)
 }
