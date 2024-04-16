@@ -22,7 +22,7 @@ func TestArgs(t *testing.T) {
 	jerr := New("args: %s, %v")
 	require.EqualError(jerr, "args: %s, %v")
 
-	err := jerr.Args("one", 2)
+	err := jerr.New().Args("one", 2)
 	require.EqualError(err, "args: one, 2")
 }
 
@@ -36,7 +36,7 @@ func TestWrap(t *testing.T) {
 	require.True(errors.Is(jerr, jerr))
 	require.False(errors.Is(jerr, err))
 
-	jerrw := jerr.Wrap(err)
+	jerrw := jerr.New().Wrap(err)
 	require.True(errors.Is(jerrw, err))
 	require.EqualError(jerrw, "jerror error: standard error")
 
@@ -44,7 +44,7 @@ func TestWrap(t *testing.T) {
 	require.True(errors.Is(errw, jerr))
 	require.True(errors.Is(errw, err))
 
-	jerrw2 := jerr2.Wrap(errw)
+	jerrw2 := jerr2.New().Wrap(errw)
 	require.True(errors.Is(jerrw2, jerr))
 	require.True(errors.Is(jerrw2, err))
 	require.True(errors.Is(jerrw2, jerr2))
@@ -62,14 +62,14 @@ type ErrEmbed struct {
 
 func ErrEmbedWrap(code int, err error) *ErrEmbed {
 	return &ErrEmbed{
-		JError: ErrTest.Wrap(err),
+		JError: ErrTest.New().Wrap(err),
 		Code:   code,
 	}
 }
 
 func ErrEmbedNew(code int) *ErrEmbed {
 	return &ErrEmbed{
-		JError: ErrTest.Args(),
+		JError: ErrTest.New(),
 		Code:   code,
 	}
 }
@@ -93,7 +93,7 @@ func TestEmbed(t *testing.T) {
 func TestStack(t *testing.T) {
 	require := require.New(t)
 
-	err := New("stack error").Stack()
+	err := New("stack error").New()
 	require.Len(err.Frames, 3)
 
 	last := err.Frames[0]

@@ -27,6 +27,34 @@ const (
 	debug = true
 )
 
+// JErrorBase is used to construct specific errors.
+type JErrorBase struct {
+	message string
+}
+
+// New creates a new Error and fills the stack trace.
+func (j *JErrorBase) New() *JError {
+	return &JError{
+		message: j.message,
+		parent:  j,
+		Frames:  fillFrames(3, 10),
+	}
+}
+
+// Error implements error interface.
+func (j *JErrorBase) Error() string {
+	return j.message
+}
+
+// New creates a new Error with the given message.
+func New(message string) *JErrorBase {
+	err := &JErrorBase{
+		message: message,
+	}
+
+	return err
+}
+
 // JError contains an error with a message and a unique identifier.
 type JError struct {
 	message string
@@ -42,44 +70,17 @@ type Frame struct {
 	Line     int
 }
 
-// New creates a new Error with the given message.
-func New(message string) *JError {
-	err := &JError{
-		message: message,
-	}
-	err.parent = err
-
-	return err
-}
-
 // Args returns a version of the error with the parameters from the message
 // substituted by its args.
 func (j *JError) Args(args ...interface{}) *JError {
-	return &JError{
-		message: fmt.Sprintf(j.message, args...),
-		parent:  j.parent,
-		wrap:    j.wrap,
-		Frames:  j.Frames,
-	}
+	j.message = fmt.Sprintf(j.message, args...)
+	return j
 }
 
 // Wrap returns a version of the error wrapping another error.
 func (j *JError) Wrap(err error) *JError {
-	return &JError{
-		message: j.message,
-		parent:  j.parent,
-		wrap:    err,
-		Frames:  j.Frames,
-	}
-}
-
-func (j *JError) Stack() *JError {
-	return &JError{
-		message: j.message,
-		parent:  j.parent,
-		wrap:    j.wrap,
-		Frames:  fillFrames(3, 10),
-	}
+	j.wrap = err
+	return j
 }
 
 // Error implements error interface.
@@ -98,8 +99,8 @@ func (j *JError) Unwrap() error {
 
 // Is implements error interface.
 func (j *JError) Is(err error) bool {
-	if jerr, ok := err.(*JError); ok {
-		return jerr.parent == j.parent
+	if jerr, ok := err.(*JErrorBase); ok {
+		return jerr == j.parent
 	}
 
 	return false
