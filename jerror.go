@@ -24,7 +24,7 @@ import (
 var _ error = &JError{}
 
 const (
-	debug = false
+	debug = true
 )
 
 // JError contains an error with a message and a unique identifier.
@@ -108,7 +108,9 @@ func (j *JError) Is(err error) bool {
 func fillFrames(skip, depth int) []Frame {
 	if debug {
 		start := time.Now()
-		defer fmt.Printf("fillFrames took %v\n", time.Since(start).String())
+		defer func() {
+			fmt.Printf("fillFrames took %v\n", time.Since(start).String())
+		}()
 	}
 
 	pc := make([]uintptr, depth)
