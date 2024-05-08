@@ -29,30 +29,11 @@ const (
 	stackSkip  = 3
 )
 
-// JErrorBase is used to construct specific errors.
-type JErrorBase struct {
-	message string
-}
-
-// New creates a new Error and fills the stack trace.
-func (j *JErrorBase) New() *JError {
-	return &JError{
-		message: j.message,
-		parent:  j,
-		Frames:  fillFrames(stackSkip, stackDepth),
-		Values:  make(map[string]interface{}),
-	}
-}
-
-// Error implements error interface.
-func (j *JErrorBase) Error() string {
-	return j.message
-}
-
 // New creates a new Error with the given message.
-func New(message string) *JErrorBase {
-	err := &JErrorBase{
-		message: message,
+func New(message string) *JError {
+	err := &JError{
+		instance: false,
+		message:  message,
 	}
 
 	return err
@@ -60,11 +41,12 @@ func New(message string) *JErrorBase {
 
 // JError contains an error with a message and a unique identifier.
 type JError struct {
-	message string
-	parent  error
-	wrap    error
-	Values  map[string]interface{}
-	Frames  []Frame
+	instance bool
+	message  string
+	parent   error
+	wrap     error
+	Values   map[string]interface{}
+	Frames   []Frame
 }
 
 // Frame is a stack frame for the error.
@@ -74,15 +56,36 @@ type Frame struct {
 	Line     int
 }
 
+// New creates a new Error instance and fills the stack trace.
+func (j *JError) New() *JError {
+	return &JError{
+		instance: true,
+		message:  j.message,
+		parent:   j,
+		Frames:   fillFrames(stackSkip, stackDepth),
+		Values:   make(map[string]interface{}),
+	}
+}
+
+func (j *JError) get() *JError {
+	if j.instance {
+		return j
+	}
+
+	return j.New()
+}
+
 // Args returns a version of the error with the parameters from the message
 // substituted by its args.
 func (j *JError) Args(args ...interface{}) *JError {
+	j = j.get()
 	j.message = fmt.Sprintf(j.message, args...)
 	return j
 }
 
 // Wrap returns a version of the error wrapping another error.
 func (j *JError) Wrap(err error) *JError {
+	j = j.get()
 	j.wrap = err
 	return j
 }
@@ -103,7 +106,7 @@ func (j *JError) Unwrap() error {
 
 // Is implements error interface.
 func (j *JError) Is(err error) bool {
-	if jerr, ok := err.(*JErrorBase); ok {
+	if jerr, ok := err.(*JError); ok {
 		return jerr == j.parent
 	}
 
