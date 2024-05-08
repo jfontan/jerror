@@ -21,7 +21,7 @@ It also generates a stack trace when the error is created, so you can see where 
 ```go
     ErrExample := jerror.New("error")
     err := ErrExample.New()
-    spew.Dump(err.Frames)
+    spew.Dump(err.Frames())
     // ([]jerror.Frame) (len=3 cap=4) {
     //  (jerror.Frame) {
     //   Function: (string) (len=35) "github.com/jfontan/jerror.TestStack",
