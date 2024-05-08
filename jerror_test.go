@@ -94,9 +94,10 @@ func TestStack(t *testing.T) {
 	require := require.New(t)
 
 	err := New("stack error").New()
-	require.Len(err.Frames, 3)
+	require.Len(err.frames, 3)
 
-	last := err.Frames[0]
+	frames := err.Frames()
+	last := frames[0]
 	parts := strings.Split(last.Function, "/")
 	require.Equal("jerror.TestStack", parts[len(parts)-1])
 
@@ -113,6 +114,8 @@ func TestValues(t *testing.T) {
 	err := orig.New()
 	err.Set("key", "value")
 	require.EqualError(err, "values error")
+
+	// make sure the original error is not modified
 	_, ok := orig.Get("key")
 	require.False(ok)
 

@@ -46,7 +46,7 @@ type JError struct {
 	parent   error
 	wrap     error
 	values   map[string]interface{}
-	Frames   []Frame
+	frames   []Frame
 }
 
 // Frame is a stack frame for the error.
@@ -62,7 +62,7 @@ func (j *JError) New() *JError {
 		instance: true,
 		message:  j.message,
 		parent:   j,
-		Frames:   fillFrames(stackSkip, stackDepth),
+		frames:   fillFrames(stackSkip, stackDepth),
 		values:   make(map[string]interface{}),
 	}
 }
@@ -136,6 +136,11 @@ func (j *JError) GetString(key string) (string, bool) {
 func (j *JError) GetInt(key string) (int, bool) {
 	val, ok := j.values[key].(int)
 	return val, ok
+}
+
+// Frames returns the stack frames of the error.
+func (j *JError) Frames() []Frame {
+	return j.frames
 }
 
 func fillFrames(skip, depth int) []Frame {
