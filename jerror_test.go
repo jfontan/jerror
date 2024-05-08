@@ -113,6 +113,7 @@ func TestValues(t *testing.T) {
 	orig := New("values error")
 	err := orig.New()
 	err.Set("key", "value")
+	err.Set("key2", 42)
 	require.EqualError(err, "values error")
 
 	// make sure the original error is not modified
@@ -122,4 +123,36 @@ func TestValues(t *testing.T) {
 	val, ok := err.Get("key")
 	require.True(ok)
 	require.Equal("value", val)
+
+	val, ok = err.Get("key2")
+	require.True(ok)
+	require.Equal(42, val)
+
+	val, ok = err.GetInt("key2")
+	require.True(ok)
+	require.Equal(42, val)
+
+	// return not ok if the type is not correct
+	val, ok = err.GetInt("key")
+	require.False(ok)
+
+	logAttrs := err.SlogAttributes("test", true)
+	require.Equal("test", logAttrs.Key)
+
+	group := logAttrs.Value.Group()
+
+	require.Equal("error", group[0].Key)
+	require.Equal("values error", group[0].Value.String())
+
+	require.Equal("stack", group[1].Key)
+	require.Len(group[1].Value.Group(), 3)
+
+	values := group[2].Value.Group()
+	require.Equal("values", group[2].Key)
+	require.Len(values, 2)
+
+	require.Equal("key", values[0].Key)
+	require.Equal("value", values[0].Value.String())
+	require.Equal("key2", values[1].Key)
+	require.Equal("42", values[1].Value.String())
 }

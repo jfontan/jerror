@@ -17,8 +17,13 @@ package jerror
 
 import (
 	"fmt"
+	"log/slog"
 	"runtime"
+	"sort"
+	"strconv"
 	"time"
+
+	"golang.org/x/exp/maps"
 )
 
 var _ error = &JError{}
@@ -141,6 +146,43 @@ func (j *JError) GetInt(key string) (int, bool) {
 // Frames returns the stack frames of the error.
 func (j *JError) Frames() []Frame {
 	return j.frames
+}
+
+func (j *JError) SlogAttributes(group string, error bool) slog.Attr {
+	var attrs []any
+
+	if error {
+		attrs = append(attrs, slog.String("error", j.Error()))
+	}
+
+	if len(j.frames) > 0 {
+		var lines []any
+		for i, frame := range j.frames {
+			lines = append(lines, slog.String(strconv.Itoa(i), fmt.Sprintf(
+				"%s %s:%d",
+				frame.Function,
+				frame.File,
+				frame.Line,
+			)))
+		}
+		attrs = append(attrs, slog.Group("stack", lines...))
+	}
+
+	// TODO: do not convert values to string
+	if len(j.values) > 0 {
+		var values []any
+
+		keys := maps.Keys(j.values)
+		sort.Strings(keys)
+
+		for _, key := range keys {
+			value := j.values[key]
+			values = append(values, slog.String(key, fmt.Sprintf("%v", value)))
+		}
+		attrs = append(attrs, slog.Group("values", values...))
+	}
+
+	return slog.Group(group, attrs...)
 }
 
 func fillFrames(skip, depth int) []Frame {
