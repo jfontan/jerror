@@ -105,3 +105,18 @@ func TestStack(t *testing.T) {
 
 	require.True(last.Line > 0)
 }
+
+func TestValues(t *testing.T) {
+	require := require.New(t)
+
+	orig := New("values error")
+	err := orig.New()
+	err.Set("key", "value")
+	require.EqualError(err, "values error")
+	_, ok := orig.Get("key")
+	require.False(ok)
+
+	val, ok := err.Get("key")
+	require.True(ok)
+	require.Equal("value", val)
+}

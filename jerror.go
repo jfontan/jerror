@@ -45,7 +45,7 @@ type JError struct {
 	message  string
 	parent   error
 	wrap     error
-	Values   map[string]interface{}
+	values   map[string]interface{}
 	Frames   []Frame
 }
 
@@ -63,7 +63,7 @@ func (j *JError) New() *JError {
 		message:  j.message,
 		parent:   j,
 		Frames:   fillFrames(stackSkip, stackDepth),
-		Values:   make(map[string]interface{}),
+		values:   make(map[string]interface{}),
 	}
 }
 
@@ -113,15 +113,28 @@ func (j *JError) Is(err error) bool {
 	return false
 }
 
+// Set sets a value in the error.
+func (j *JError) Set(key string, value interface{}) *JError {
+	j = j.get()
+	j.values[key] = value
+	return j
+}
+
+// Get returns a value from the error.
+func (j *JError) Get(key string) (interface{}, bool) {
+	val, ok := j.values[key]
+	return val, ok
+}
+
 // GetString returns a string value from the error.
 func (j *JError) GetString(key string) (string, bool) {
-	val, ok := j.Values[key].(string)
+	val, ok := j.values[key].(string)
 	return val, ok
 }
 
 // GetInt returns an int value from the error.
 func (j *JError) GetInt(key string) (int, bool) {
-	val, ok := j.Values[key].(int)
+	val, ok := j.values[key].(int)
 	return val, ok
 }
 
