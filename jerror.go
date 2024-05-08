@@ -29,7 +29,7 @@ import (
 var _ error = &JError{}
 
 const (
-	debug      = true
+	debug      = false
 	stackDepth = 10
 	stackSkip  = 3
 )
