@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/require"
 )
 
@@ -155,4 +156,33 @@ func TestValues(t *testing.T) {
 	require.Equal("value", values[0].Value.String())
 	require.Equal("key2", values[1].Key)
 	require.Equal("42", values[1].Value.String())
+}
+
+func TestAs(t *testing.T) {
+	require := require.New(t)
+	spew.Config.DisableMethods = true
+
+	ErrAs1 := New("1")
+	ErrAs2 := New("2")
+
+	err1 := ErrAs1.New().Set("key", 1)
+	err2 := ErrAs2.New().Set("key", 2).Wrap(err1)
+
+	err := ErrAs1.New().Set("test", "test")
+	// ok := errors.As(err2, &err)
+	ok := As(err2, &err)
+	spew.Dump(err)
+	require.True(ok)
+	println(err.Error())
+	val, ok := err.GetInt("key")
+	require.True(ok)
+	require.Equal(1, val)
+
+	err = ErrAs2.New()
+	// ok = errors.As(err2, &err)
+	ok = As(err2, &err)
+	require.True(ok)
+	val, ok = err.GetInt("key")
+	require.True(ok)
+	require.Equal(2, val)
 }

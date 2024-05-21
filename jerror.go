@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"golang.org/x/exp/maps"
 )
 
@@ -42,6 +43,7 @@ func New(message string) *JError {
 		instance: false,
 		message:  message,
 	}
+	err.parent = err
 
 	return err
 }
@@ -113,9 +115,53 @@ func (j *JError) Unwrap() error {
 
 // Is implements error interface.
 func (j *JError) Is(err error) bool {
+	println("Is", err)
 	if jerr, ok := err.(*JError); ok {
-		return jerr == j.parent
+		if jerr.parent == j.parent {
+			// spew.Dump(j)
+			// spew.Dump(jerr)
+			return true
+		}
 	}
+
+	return false
+}
+
+// As implements error interface.
+func (j *JError) As(target interface{}) bool {
+	// println("As", target.(*JError).Error())
+	// val := reflect.ValueOf(target)
+	// typ := val.Type()
+	// targetType := typ.Elem()
+
+	// if targetType.Kind() == reflect.Interface && targetType.Implements(reflect.TypeOf((*error)(nil)).Elem()) {
+	spew.Dump(target)
+	if jerr, ok := target.(**JError); ok {
+		println("correct")
+		// spew.Dump(j)
+		// spew.Dump(target)
+		// err := (target.(*JError))
+		if j.Is(*jerr) {
+			// err = j
+			*j = **jerr
+			spew.Dump(j)
+			println("IS!!!")
+		}
+		return true
+	}
+
+	// if jerr, ok := target.(**JError); ok && j.Is(*jerr) {
+	// 	println("correct")
+	// 	// spew.Dump(j)
+	// 	// spew.Dump(jerr)
+	// 	// spew.Dump(target)
+	// 	// jerr = j
+
+	// 	target = &j
+	// 	spew.Dump(j)
+	// 	spew.Dump(target)
+	// 	return true
+	// }
 
 	return false
 }
