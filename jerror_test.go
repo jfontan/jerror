@@ -3,6 +3,7 @@ package jerror
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -91,9 +92,27 @@ func TestEmbed(t *testing.T) {
 }
 
 func TestStack(t *testing.T) {
+	// created with New
+	err := New("stack error").New()
+	testStack(t, err)
+
+	// created with Set
+	err = New("stack error").Set("key", "value")
+	testStack(t, err)
+
+	// created with Wrap
+	err = New("stack error").Wrap(os.ErrClosed)
+	testStack(t, err)
+
+	// created with Args
+	err = New("stack error %d").Args(1)
+	testStack(t, err)
+}
+
+func testStack(t *testing.T, err *JError) {
+	t.Helper()
 	require := require.New(t)
 
-	err := New("stack error").New()
 	require.Len(err.frames, 3)
 
 	frames := err.Frames()
