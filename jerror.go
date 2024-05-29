@@ -184,6 +184,11 @@ func (j *JError) SlogAttributes(group string, error bool) slog.Attr {
 		attrs = append(attrs, slog.Group("values", values...))
 	}
 
+	last := Last(j)
+	if last != nil && last != j {
+		attrs = append(attrs, last.SlogAttributes("last_jerror", true))
+	}
+
 	return slog.Group(group, attrs...)
 }
 
