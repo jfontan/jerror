@@ -3,6 +3,7 @@ package jerror
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -91,9 +92,27 @@ func TestEmbed(t *testing.T) {
 }
 
 func TestStack(t *testing.T) {
+	// created with New
+	err := New("stack error").New()
+	testStack(t, err)
+
+	// created with Set
+	err = New("stack error").Set("key", "value")
+	testStack(t, err)
+
+	// created with Wrap
+	err = New("stack error").Wrap(os.ErrClosed)
+	testStack(t, err)
+
+	// created with Args
+	err = New("stack error %d").Args(1)
+	testStack(t, err)
+}
+
+func testStack(t *testing.T, err *JError) {
+	t.Helper()
 	require := require.New(t)
 
-	err := New("stack error").New()
 	require.Len(err.frames, 3)
 
 	frames := err.Frames()
@@ -155,4 +174,37 @@ func TestValues(t *testing.T) {
 	require.Equal("value", values[0].Value.String())
 	require.Equal("key2", values[1].Key)
 	require.Equal("42", values[1].Value.String())
+}
+
+func TestSlogOldestError(t *testing.T) {
+	jerr2 := New("jerr2").Set("jerr", 2)
+	jerr1 := New("jerr1").Set("jerr", 1).Wrap(jerr2)
+
+	attrs := jerr1.SlogAttributes("test", true)
+	grp := attrs.Value.Group()
+
+	var found_first, found_last bool
+	for _, a := range grp {
+		switch a.Key {
+		case "values":
+			values := a.Value.Group()
+			require.Len(t, values, 1)
+			require.Equal(t, "1", values[0].Value.String())
+			found_first = true
+
+		case "last_jerror":
+			ngrp := a.Value.Group()
+			for _, a := range ngrp {
+				if a.Key == "values" {
+					values := a.Value.Group()
+					require.Len(t, values, 1)
+					require.Equal(t, "2", values[0].Value.String())
+					found_last = true
+				}
+			}
+		}
+	}
+
+	require.True(t, found_first)
+	require.True(t, found_last)
 }

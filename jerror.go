@@ -33,7 +33,7 @@ var _ error = &JError{}
 const (
 	debug      = false
 	stackDepth = 10
-	stackSkip  = 3
+	stackSkip  = 4
 )
 
 // New creates a new Error with the given message.
@@ -65,6 +65,10 @@ type Frame struct {
 
 // New creates a new Error instance and fills the stack trace.
 func (j *JError) New() *JError {
+	return j.newStack(stackSkip)
+}
+
+func (j *JError) newStack(stackSkip int) *JError {
 	return &JError{
 		instance: true,
 		message:  j.message,
@@ -79,7 +83,7 @@ func (j *JError) get() *JError {
 		return j
 	}
 
-	return j.New()
+	return j.newStack(stackSkip + 1)
 }
 
 // Args returns a version of the error with the parameters from the message
@@ -182,6 +186,11 @@ func (j *JError) SlogAttributes(group string, error bool) slog.Attr {
 			values = append(values, slog.String(key, fmt.Sprintf("%v", value)))
 		}
 		attrs = append(attrs, slog.Group("values", values...))
+	}
+
+	last := Last(j)
+	if last != nil && last != j {
+		attrs = append(attrs, last.SlogAttributes("last_jerror", true))
 	}
 
 	return slog.Group(group, attrs...)
