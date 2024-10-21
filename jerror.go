@@ -118,7 +118,7 @@ func (j *JError) Unwrap() error {
 // Is implements error interface.
 func (j *JError) Is(err error) bool {
 	if jerr, ok := err.(*JError); ok {
-		return jerr == j.parent
+		return jerr == j.parent || jerr.parent == j.parent
 	}
 
 	return false
