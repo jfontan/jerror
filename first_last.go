@@ -19,10 +19,7 @@ func First(err error) *JError {
 // Last JError in a wrapped errors chain.
 func Last(err error) *JError {
 	var jerr *JError
-	for {
-		if err == nil {
-			break
-		}
+	for err != nil {
 		if jerr2, ok := err.(*JError); ok {
 			jerr = jerr2
 		}

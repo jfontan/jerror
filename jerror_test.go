@@ -131,8 +131,8 @@ func TestValues(t *testing.T) {
 
 	orig := New("values error")
 	err := orig.New()
-	err.Set("key", "value")
-	err.Set("key2", 42)
+	_ = err.Set("key", "value")
+	_ = err.Set("key2", 42)
 	require.EqualError(err, "values error")
 
 	// make sure the original error is not modified
@@ -154,6 +154,7 @@ func TestValues(t *testing.T) {
 	// return not ok if the type is not correct
 	val, ok = err.GetInt("key")
 	require.False(ok)
+	require.Equal(0, val)
 
 	logAttrs := err.SlogAttributes("test", true)
 	require.Equal("test", logAttrs.Key)
