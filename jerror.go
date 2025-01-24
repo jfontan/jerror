@@ -36,11 +36,20 @@ const (
 	stackSkip  = 4
 )
 
+type Values map[string]any
+
 // New creates a new Error with the given message.
 func New(message string) *JError {
+	return NewWithValues(message, nil)
+}
+
+// New creates a new Error with the given message and a set of values that
+// will be inherited by child errors.
+func NewWithValues(message string, values Values) *JError {
 	err := &JError{
 		instance: false,
 		message:  message,
+		values:   values,
 	}
 
 	return err
@@ -52,7 +61,7 @@ type JError struct {
 	message  string
 	parent   error
 	wrap     error
-	values   map[string]interface{}
+	values   Values
 	frames   []Frame
 }
 
@@ -69,12 +78,19 @@ func (j *JError) New() *JError {
 }
 
 func (j *JError) newStack(stackSkip int) *JError {
+	var values Values
+	if len(j.values) > 0 {
+		values = maps.Clone(j.values)
+	} else {
+		values = make(Values)
+	}
+
 	return &JError{
 		instance: true,
 		message:  j.message,
 		parent:   j,
 		frames:   fillFrames(stackSkip, stackDepth),
-		values:   make(map[string]interface{}),
+		values:   values,
 	}
 }
 

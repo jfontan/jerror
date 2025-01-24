@@ -209,3 +209,20 @@ func TestSlogOldestError(t *testing.T) {
 	require.True(t, found_first)
 	require.True(t, found_last)
 }
+
+func TestNewWithValues(t *testing.T) {
+	base := NewWithValues("test", Values{
+		"foo": "bar",
+		"baz": "qux",
+	})
+
+	child := base.New().Set("foo", "baz")
+
+	v, ok := base.GetString("foo")
+	require.True(t, ok)
+	require.Equal(t, "bar", v)
+
+	v, ok = child.GetString("foo")
+	require.True(t, ok)
+	require.Equal(t, "baz", v)
+}
