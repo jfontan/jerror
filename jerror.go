@@ -23,6 +23,7 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/exp/maps"
@@ -37,6 +38,12 @@ const (
 )
 
 type Values map[string]any
+
+var (
+	throttled bool
+	budget    atomic.Int64
+	ticker    *time.Ticker
+)
 
 // New creates a new Error with the given message.
 func New(message string) *JError {
@@ -53,6 +60,32 @@ func NewWithValues(message string, values Values) *JError {
 	}
 
 	return err
+}
+
+// Throttle limits the maximum number of new errors with stack frames generated
+// for each interval. Getting stack frames is expensive and can be a problem
+// when a lot of errors are being generated.
+func Throttle(interval time.Duration, max int) {
+	if ticker != nil {
+		ticker.Stop()
+	}
+
+	throttled = true
+	ticker = time.NewTicker(interval)
+	budget.Store(int64(max))
+
+	go func() {
+		for throttled {
+			<-ticker.C
+			budget.Store(int64(max))
+		}
+	}()
+}
+
+// Unthrottle disables frame generation throttling for new errors.
+func Unthrottle() {
+	ticker.Stop()
+	throttled = false
 }
 
 // JError contains an error with a message and a unique identifier.
@@ -85,11 +118,16 @@ func (j *JError) newStack(stackSkip int) *JError {
 		values = make(Values)
 	}
 
+	var frames []Frame
+	if !throttled || budget.Add(-1) >= 0 {
+		frames = fillFrames(stackSkip, stackDepth)
+	}
+
 	return &JError{
 		instance: true,
 		message:  j.message,
 		parent:   j,
-		frames:   fillFrames(stackSkip, stackDepth),
+		frames:   frames,
 		values:   values,
 	}
 }

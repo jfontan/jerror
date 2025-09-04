@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -225,4 +226,44 @@ func TestNewWithValues(t *testing.T) {
 	v, ok = child.GetString("foo")
 	require.True(t, ok)
 	require.Equal(t, "baz", v)
+}
+
+func TestThrottle(t *testing.T) {
+	t.Cleanup(Unthrottle)
+
+	e := New("msg")
+
+	Throttle(time.Millisecond, 5)
+
+	start := time.Now()
+	var frames int
+	var noFrames int
+	for time.Since(start) < 4*time.Millisecond {
+		err := e.New()
+		if err.Frames() != nil {
+			frames++
+		} else {
+			noFrames++
+		}
+	}
+
+	require.Equal(t, 5*4, frames)
+	require.NotZero(t, noFrames)
+
+	Unthrottle()
+
+	frames = 0
+	noFrames = 0
+	start = time.Now()
+	for time.Since(start) < 4*time.Millisecond {
+		err := e.New()
+		if err.Frames() != nil {
+			frames++
+		} else {
+			noFrames++
+		}
+	}
+
+	require.NotZero(t, frames)
+	require.Zero(t, noFrames)
 }
