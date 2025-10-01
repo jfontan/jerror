@@ -43,6 +43,8 @@ var (
 	throttled bool
 	budget    atomic.Int64
 	ticker    *time.Ticker
+
+	disabledStack bool
 )
 
 // New creates a new Error with the given message.
@@ -57,6 +59,14 @@ func NewWithValues(message string, values Values) *JError {
 		instance: false,
 		message:  message,
 		values:   values,
+
+		// it's faster to copy a prebuilt struct
+		pristine: &JError{
+			instance: true,
+			message:  message,
+			values:   nil,
+			frames:   nil,
+		},
 	}
 
 	return err
@@ -96,6 +106,8 @@ type JError struct {
 	wrap     error
 	values   Values
 	frames   []Frame
+
+	pristine *JError
 }
 
 // Frame is a stack frame for the error.
@@ -111,25 +123,17 @@ func (j *JError) New() *JError {
 }
 
 func (j *JError) newStack(stackSkip int) *JError {
-	var values Values
+	n := *j.pristine
+
 	if len(j.values) > 0 {
-		values = maps.Clone(j.values)
-	} else {
-		values = make(Values)
+		n.values = maps.Clone(j.values)
 	}
 
-	var frames []Frame
-	if !throttled || budget.Add(-1) >= 0 {
-		frames = fillFrames(stackSkip, stackDepth)
+	if !disabledStack && (!throttled || budget.Add(-1) >= 0) {
+		n.frames = fillFrames(stackSkip, stackDepth)
 	}
 
-	return &JError{
-		instance: true,
-		message:  j.message,
-		parent:   j,
-		frames:   frames,
-		values:   values,
-	}
+	return &n
 }
 
 func (j *JError) get() *JError {
