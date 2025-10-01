@@ -1,6 +1,8 @@
 package jerror
 
-import "errors"
+import (
+	"errors"
+)
 
 // As retrieves the first JError of the same type as tarjet. To use it create an
 // error of the same type you want to get and pass a pointer to it. For example:

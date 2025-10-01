@@ -68,6 +68,7 @@ func NewWithValues(message string, values Values) *JError {
 			frames:   nil,
 		},
 	}
+	err.pristine.parent = err
 
 	return err
 }
@@ -102,7 +103,7 @@ func Unthrottle() {
 type JError struct {
 	instance bool
 	message  string
-	parent   error
+	parent   *JError
 	wrap     error
 	values   Values
 	frames   []Frame
@@ -146,7 +147,7 @@ func (j *JError) get() *JError {
 
 // Args returns a version of the error with the parameters from the message
 // substituted by its args.
-func (j *JError) Args(args ...interface{}) *JError {
+func (j *JError) Args(args ...any) *JError {
 	j = j.get()
 	j.message = fmt.Sprintf(j.message, args...)
 	return j
@@ -183,14 +184,23 @@ func (j *JError) Is(err error) bool {
 }
 
 // Set sets a value in the error.
-func (j *JError) Set(key string, value interface{}) *JError {
+func (j *JError) Set(key string, value any) *JError {
 	j = j.get()
+	if j.values == nil {
+		j.values = make(Values)
+	}
+
 	j.values[key] = value
 	return j
 }
 
 // Get returns a value from the error.
-func (j *JError) Get(key string) (interface{}, bool) {
+func (j *JError) Get(key string) (any, bool) {
+	if j.values == nil && j.parent != nil {
+		val, ok := j.parent.values[key]
+		return val, ok
+	}
+
 	val, ok := j.values[key]
 	return val, ok
 }

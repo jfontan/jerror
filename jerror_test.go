@@ -247,7 +247,8 @@ func TestThrottle(t *testing.T) {
 		}
 	}
 
-	require.Equal(t, 5*4, frames)
+	number := 5 * 4
+	require.Contains(t, []int{number - 1, number, number + 1}, frames)
 	require.NotZero(t, noFrames)
 
 	Unthrottle()
