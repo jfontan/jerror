@@ -4,19 +4,28 @@ Package jerror is a helper to create errors. It supports creating parametrized
 messages to give more information on the error and easier way of wrapping.
 These errors are compatible with standard `errors.Is` and `errors.Unwrap`.
 
-Example:
+## Examples
+
+### Basic usage
 
 ```go
+// create a new type, it has a string placeholder
 ErrCannotOpen := jerror.New("can not open file %s")
 
 fileName := "file.txt"
 err := os.Open(fileName)
 if err != nil {
+		// new intance of the error, sets the placeholder and wraps an error. The
+		// error returned is:
+		// 		can not open file file.txt: file does not exist
     return ErrCannotOpen.New().Args(fileName).Wrap(err)
 }
 ```
 
-It also generates a stack trace when the error is created, so you can see where the error was created.
+### Error stack trace
+
+It also generates a stack trace when the error is created, so you can see where
+the error was created.
 
 ```go
 ErrExample := jerror.New("error")
@@ -41,17 +50,22 @@ spew.Dump(err.Frames())
 // }
 ```
 
-You can set and retrieve values to a base error:
+### Set error values
+
+You can set and retrieve values from an error:
 
 ```go
-jerr := jerror.New("jerror example")
-err := jerr.Set("key", "value")
-val, _ := err.GetString("key")
+jerr := jerror.New("cannot open file")
+err := jerr.Set("path", "/some/path.txt")
+val, _ := err.GetString("path")
 fmt.Println(val)
-// value
+// /some/path.txt
 ```
 
-It can also generate `slog` compatible attributes to log the error and of there is older errors it also gives information about the oldest error:
+### Generate slog attributes
+
+It can also generate `slog` compatible attributes to log the error and of there
+is older errors it also gives information about the oldest error:
 
 ```go
 jerr2 := jerror.New("jerror 2").Set("key", "value 2")
