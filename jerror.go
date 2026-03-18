@@ -259,7 +259,7 @@ func (j *JError) SlogAttributes(group string) slog.Attr {
 		attrs = append(attrs, slog.Group("values", values...))
 	}
 
-	oldest := Oldest(j)
+	oldest := Last(j)
 	if oldest != nil && oldest != j {
 		attrs = append(attrs, oldest.SlogAttributes("oldest_jerror"))
 	}
