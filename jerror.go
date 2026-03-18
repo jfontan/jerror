@@ -20,13 +20,12 @@ package jerror
 import (
 	"fmt"
 	"log/slog"
+	"maps"
 	"runtime"
-	"sort"
+	"slices"
 	"strconv"
 	"sync/atomic"
 	"time"
-
-	"golang.org/x/exp/maps"
 )
 
 var _ error = &JError{}
@@ -251,8 +250,7 @@ func (j *JError) SlogAttributes(group string) slog.Attr {
 	if len(j.values) > 0 {
 		var values []any
 
-		keys := maps.Keys(j.values)
-		sort.Strings(keys)
+		keys := slices.Sorted(maps.Keys(j.values))
 
 		for _, key := range keys {
 			value := j.values[key]
