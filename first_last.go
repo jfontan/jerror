@@ -29,3 +29,17 @@ func Last(err error) *JError {
 
 	return jerr
 }
+
+// Chain returns all JErrors in a wrapped error chain.
+func Chain(err error) []*JError {
+	var jerrs []*JError
+	for err != nil {
+		if jerr, ok := err.(*JError); ok {
+			jerrs = append(jerrs, jerr)
+		}
+
+		err = errors.Unwrap(err)
+	}
+
+	return jerrs
+}

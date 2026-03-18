@@ -176,7 +176,7 @@ func (j *JError) Unwrap() error {
 // Is implements error interface.
 func (j *JError) Is(err error) bool {
 	if jerr, ok := err.(*JError); ok {
-		return jerr == j.parent || jerr.parent == j.parent
+		return jerr == j.parent || jerr.parent == j.parent || jerr.parent == j
 	}
 
 	return false
@@ -265,6 +265,12 @@ func (j *JError) SlogAttributes(group string) slog.Attr {
 	}
 
 	return slog.Group(group, attrs...)
+}
+
+// Is returns true if the error is a JError.
+func Is(err error) bool {
+	_, ok := err.(*JError)
+	return ok
 }
 
 func fillFrames(skip, depth int) []Frame {
