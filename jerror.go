@@ -222,12 +222,17 @@ func (j *JError) Frames() []Frame {
 	return j.frames
 }
 
-func (j *JError) SlogAttributes(group string, error bool) slog.Attr {
+// SlogAttributes generates atributes from error data. It returns the error data
+// inside an attr named group. The data inside that group is:
+//
+// * error: error message
+// * stack: stack trace for the error
+// * values: error values
+// * oldest_jerror: information about the oldest first jerror in the chain
+func (j *JError) SlogAttributes(group string) slog.Attr {
 	var attrs []any
 
-	if error {
-		attrs = append(attrs, slog.String("error", j.Error()))
-	}
+	attrs = append(attrs, slog.String("error", j.Error()))
 
 	if len(j.frames) > 0 {
 		var lines []any
@@ -256,9 +261,9 @@ func (j *JError) SlogAttributes(group string, error bool) slog.Attr {
 		attrs = append(attrs, slog.Group("values", values...))
 	}
 
-	last := Last(j)
-	if last != nil && last != j {
-		attrs = append(attrs, last.SlogAttributes("last_jerror", true))
+	oldest := Oldest(j)
+	if oldest != nil && oldest != j {
+		attrs = append(attrs, oldest.SlogAttributes("oldest_jerror"))
 	}
 
 	return slog.Group(group, attrs...)

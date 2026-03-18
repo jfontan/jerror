@@ -157,7 +157,7 @@ func TestValues(t *testing.T) {
 	require.False(ok)
 	require.Equal(0, val)
 
-	logAttrs := err.SlogAttributes("test", true)
+	logAttrs := err.SlogAttributes("test")
 	require.Equal("test", logAttrs.Key)
 
 	group := logAttrs.Value.Group()
@@ -182,7 +182,7 @@ func TestSlogOldestError(t *testing.T) {
 	jerr2 := New("jerr2").Set("jerr", 2)
 	jerr1 := New("jerr1").Set("jerr", 1).Wrap(jerr2)
 
-	attrs := jerr1.SlogAttributes("test", true)
+	attrs := jerr1.SlogAttributes("test")
 	grp := attrs.Value.Group()
 
 	var found_first, found_last bool
@@ -194,7 +194,7 @@ func TestSlogOldestError(t *testing.T) {
 			require.Equal(t, "1", values[0].Value.String())
 			found_first = true
 
-		case "last_jerror":
+		case "oldest_jerror":
 			ngrp := a.Value.Group()
 			for _, a := range ngrp {
 				if a.Key == "values" {

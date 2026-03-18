@@ -68,7 +68,7 @@ fmt.Println(string(i))
 // {
 //   "data": {
 //     "error": "jerror 1: jerror 2",
-//     "last_jerror": {
+//     "oldest_jerror": {
 //       "error": "jerror 2",
 //       "stack": {
 //         "0": "github.com/jfontan/jerror/examples.TestSlog github.com/jfontan/jerror/examples/examples_test.go:14",

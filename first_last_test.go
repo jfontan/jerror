@@ -19,7 +19,7 @@ func TestFirstLast(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, val, 1)
 
-	last := Last(err)
+	last := Oldest(err)
 	require.Error(t, last)
 	val, ok = last.GetInt("key")
 	require.True(t, ok)
@@ -34,6 +34,6 @@ func TestFirstLast(t *testing.T) {
 	none := First(err)
 	require.Nil(t, none)
 
-	none = Last(err)
+	none = Oldest(err)
 	require.Nil(t, none)
 }
